@@ -1,0 +1,31 @@
+
+1.0 alpha
+
+* first release
+
+1.0.1a
+
+* converted to automake/autoconf
+* fixed timers (so jumping doesn't stop)
+
+1.0.2
+
+* completed mouse support
+* completed GPM mouse support
+* explained rules and scoring
+* some minor bug fixes
+
+1.0.3
+
+* added scoring
+* cleaned todo list
+
+1.0.4
+
+* Support smaller terminals (as small as 19x19)
+* Support terminal resize
+* Support B&W terminals
+* Support command line options
+* Workaround nasty ALTLinux/Debian GPM bug
+* Persist high scores
+* Added man page
