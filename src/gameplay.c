@@ -245,10 +245,10 @@ void do_move(board * b) {
 	    if (bclick(b)) {
 		// this is the only exit from function
 		c_board = NULL;
-		resume_timer(1);
+		resume_timer();
 		return;
 	    }
-	    resume_timer(1);
+	    resume_timer();
 	    break;
         case OP_QUIT:
 	    quit();
@@ -620,7 +620,7 @@ int my_gpm_handler(Gpm_Event * evt, void * nothing) {
 }
 
 int gpm_getch_bridge() {
-    return Gpm_Getch();
+    return Gpm_Wgetch();
 }
 
 #endif
