@@ -349,10 +349,24 @@ void rinit(board * b, int first_time) {
         // gpm.defaultMask = GPM_MOVE|GPM_HARD;
         gpm.defaultMask = 0;
         pre_gpm_term = cur_term;
-        has_gpm = (gpm_rc = Gpm_Open(&gpm, 0)) != -1;
-        if (gpm_rc == -2) { // xterm ?? NOOO!
-            Gpm_Close();
-            has_gpm = 0;
+        // GPM is the Linux console's mouse. In a terminal emulator
+        // Gpm_Open() takes the xterm path (returning -2), and its
+        // Gpm_Close() then switches the terminal's mouse reports off,
+        // which leaves the curses mouse dead; so only the console tries.
+        {
+            const char * term = getenv("TERM");
+            if (term && (!strncmp(term, "linux", 5) || !strncmp(term, "con", 3))) {
+                has_gpm = (gpm_rc = Gpm_Open(&gpm, 0)) != -1;
+                if (gpm_rc == -2) { // xterm ?? NOOO!
+                    Gpm_Close();
+                    has_gpm = 0;
+#ifdef HAVE_CMOUSE
+                    mousemask(BUTTON1_RELEASED, &nis);  // on again
+#endif
+                }
+            } else {
+                has_gpm = 0;
+            }
         }
         if (has_gpm) {
             gpm_handler = my_gpm_handler;

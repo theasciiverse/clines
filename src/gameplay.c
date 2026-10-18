@@ -659,7 +659,10 @@ int my_gpm_handler(Gpm_Event * evt, void * nothing) {
 }
 
 int gpm_getch_bridge() {
-    return Gpm_Wgetch();
+    // gpm.h declares Gpm_Wgetch() without its parameter, a WINDOW *
+    // (its Gpm_Getch() macro passes NULL, which C23 rejects); call it
+    // with the parameter it takes
+    return ((int (*)(WINDOW *)) Gpm_Wgetch)(stdscr);
 }
 
 #endif
