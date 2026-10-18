@@ -236,7 +236,7 @@ void load_hi_score() {
 
         if (!next) { break; }
 
-        if (!next->d_name || (namlen = strlen(next->d_name)) < min_len ||
+        if ((namlen = strlen(next->d_name)) < min_len ||
                 strncmp(CSCORE_EXT,
                     next->d_name + namlen - min_len + 1, min_len)) {
             continue;
@@ -330,7 +330,6 @@ void save_hi_score() {
     int path_len;
     char * full_path;
     int fd;
-    int aux;
 
     if (!allow_hi_score || saved || score <= saved_hi_score) {
         return;
@@ -373,16 +372,23 @@ void save_hi_score() {
         return;
     }
 
-    aux = htonl(CLINES_MAGIC);
-    write(fd, &aux, sizeof(aux));
-    aux = htonl(CLINES_SCORE_VERSION);    // version, kinda
-    write(fd, &aux, sizeof(aux));
-    aux = htonl(score);
-    write(fd, &aux, sizeof(aux));
+    {
+        int rec[3];
+        rec[0] = htonl(CLINES_MAGIC);
+        rec[1] = htonl(CLINES_SCORE_VERSION);    // version, kinda
+        rec[2] = htonl(score);
+        if (write(fd, rec, sizeof(rec)) != sizeof(rec)) {
+            fprintf(stdout, "Can't write score file %s\n", full_path);
+            close(fd);
+            free(full_path);
+            return;
+        }
+    }
 
     fchmod(fd, 0644);   // ignore the umask
 
     close(fd);
+    free(full_path);
 
     if (score > hi_score) {
         fprintf(stdout, "New record saved!\n");
@@ -657,7 +663,7 @@ int color_set_checksout() {
         if (had_dups) {
             char ara[20];
             fprintf(stdout, "Press ENTER to continue, Ctrl-C to stop...");
-            fgets(ara, 15, stdin);
+            if (!fgets(ara, 15, stdin)) { ara[0] = 0; }
         }
 
         free(aux);
