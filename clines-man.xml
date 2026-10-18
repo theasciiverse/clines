@@ -144,7 +144,10 @@
           the game stops because player looses the game, or player decides
           quits the game (including stopping the game with
           <constant>SIGQUIT</constant> or <constant>SIGINT</constant>
-          signals).</para>
+          signals). Scores are kept in the player's own folder,
+          <filename>$XDG_DATA_HOME/clines</filename> (else
+          <filename>~/.local/share/clines</filename>), one file per user
+          name.</para>
         </refsect2>
 
         <refsect2>

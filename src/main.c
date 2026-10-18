@@ -12,9 +12,50 @@
 #include <clines/render.h>
 #include <clines/play.h>
 
+/* Score files live in the player's own folder: $XDG_DATA_HOME/clines,
+ * else ~/.local/share/clines, made when missing; CLINES_DATA_DIR (a
+ * shared folder, /var/tmp by default) only when there is no home. */
 #ifndef CLINES_DATA_DIR
 #define CLINES_DATA_DIR "/var/tmp"
 #endif
+
+static const char * data_dir(void) {
+
+    static char * dir = (char*)NULL;
+    const char * xdg = getenv("XDG_DATA_HOME");
+    const char * home = getenv("HOME");
+    char * p;
+    int len;
+
+    if (dir) { return dir; }
+
+    if (xdg && *xdg == '/') {
+        len = strlen(xdg) + sizeof("/clines");
+        dir = (char*)malloc(len);
+        if (dir) { snprintf(dir, len, "%s/clines", xdg); }
+    } else if (home && *home) {
+        len = strlen(home) + sizeof("/.local/share/clines");
+        dir = (char*)malloc(len);
+        if (dir) { snprintf(dir, len, "%s/.local/share/clines", home); }
+    }
+
+    if (!dir) {
+        dir = (char*)CLINES_DATA_DIR;
+        return dir;
+    }
+
+    // mkdir -p
+    for (p = dir + 1; *p; p++) {
+        if (*p == '/') {
+            *p = 0;
+            mkdir(dir, 0755);
+            *p = '/';
+        }
+    }
+    mkdir(dir, 0755);
+
+    return dir;
+}
 
 #define CLINES_MAGIC 0xc001ceed
 #define CLINES_SCORE_VERSION 1
@@ -214,9 +255,9 @@ void load_hi_score() {
         return;
     }
 
-    dir = opendir(CLINES_DATA_DIR);
+    dir = opendir(data_dir());
     min_len = strlen(CSCORE_EXT) + 1;
-    cdd_len = strlen(CLINES_DATA_DIR);
+    cdd_len = strlen(data_dir());
 
     if (!dir) { return; }
 
@@ -238,7 +279,7 @@ void load_hi_score() {
         full_path = (char*)malloc(slen);
         if (!full_path) { break; } // really sad that is
         bzero(full_path, slen);
-        snprintf(full_path, slen, "%s/%s", CLINES_DATA_DIR, next->d_name);
+        snprintf(full_path, slen, "%s/%s", data_dir(), next->d_name);
 
         fd = open(full_path, O_RDONLY);
 
@@ -309,7 +350,7 @@ void who_am_i() {
         my_user = me->pw_name;
     }
 
-    if (strchr(my_user, '/')) {
+    if (my_user && strchr(my_user, '/')) {
         // I don't want to allow username with slashes.
         my_user = (char*)NULL;
     }
@@ -339,7 +380,7 @@ void save_hi_score() {
         }
     }
 
-    path_len = strlen(CLINES_DATA_DIR) + 2 +
+    path_len = strlen(data_dir()) + 2 +
         strlen(my_user) + strlen(CSCORE_EXT);
 
     full_path = (char*)malloc(path_len);
@@ -351,7 +392,7 @@ void save_hi_score() {
     }
 
     snprintf(full_path, path_len, "%s/%s%s",
-            CLINES_DATA_DIR, my_user, CSCORE_EXT);
+            data_dir(), my_user, CSCORE_EXT);
 
     // ok now...
     
