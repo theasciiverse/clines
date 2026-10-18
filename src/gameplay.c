@@ -27,6 +27,8 @@
 #define OP_QUIT     7
 #define OP_CLS      8
 
+#define JUMP_MS     200     /* the jumping chip's step */
+
 typedef struct direc {
     int dx;
     int dy;
@@ -62,6 +64,7 @@ static m_check f_check[] = { c_north, c_south, c_west, c_east };
 static m_addr f_addr[] = { m_north, m_south, m_west, m_east };
 
 static void do_move(board *);
+static void jump_tick(board *);
 static int destroy(board *);
 static int bclick(board *);
 static int trymove(board *);
@@ -123,6 +126,11 @@ void do_move(board * b) {
     b->jst = 0;
     c_board = b;
 
+#ifdef HAVE_GPM
+    if (!has_gpm)
+#endif
+        timeout(JUMP_MS);   // a key, or time to move the jumping chip
+
     while (1) {
 
 	int c;
@@ -130,14 +138,25 @@ void do_move(board * b) {
 	int cy = b->y;
         int op;
         
-        if (!r_can_render) {
-            pause();
+        if (!r_can_render) {    // terminal too small: wait for a resize
+            c = f_getch();
+            if (c == KEY_RESIZE) {
+                rinit(b, 0);
+            } else if (c == 'q') {
+                quit();
+            }
             continue;
         }
 
 	render1(b, cx, cy);
 
-	if ((c = f_getch())==ERR) { continue; }
+	c = f_getch();
+        if (c == KEY_RESIZE) {
+            rinit(b, 0);
+            continue;
+        }
+        jump_tick(b);
+	if (c == ERR) { continue; }
 
         op = OP_NONE;
 
@@ -602,6 +621,26 @@ int p_add(board * b, int no, int tgt) {
 }
 
 board * c_board = NULL;
+
+/* Moves the selected chip one step of its jump every JUMP_MS, as the
+ * SIGALRM timer used to */
+static void jump_tick(board * b) {
+
+    static struct timeval last;
+    struct timeval now;
+    long ms;
+
+    gettimeofday(&now, NULL);
+    ms = (now.tv_sec - last.tv_sec) * 1000L
+        + (now.tv_usec - last.tv_usec) / 1000;
+    if (ms < JUMP_MS && ms >= 0) { return; }
+    last = now;
+    if (b->sel >= 0) {
+        b->jst++;
+        render1(b, b->sel, -1);
+        refresh();
+    }
+}
 
 #ifdef HAVE_GPM
 

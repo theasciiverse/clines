@@ -101,16 +101,6 @@ static int parse_options(int, char**);
 static void prargs(void);
 static int color_set_checksout(void);
 
-static struct itimerval timer = {
-    { 0, 200000 },
-    { 0, 200000 } 
-};
-
-static struct itimerval stoptimer = {
-    { 0, 0 },
-    { 0, 0 }
-};
-
 int main(int argc, char ** argv) {
 
     board * game;
@@ -137,9 +127,6 @@ int main(int argc, char ** argv) {
 
     signal(SIGQUIT, mysig);
     signal(SIGINT, mysig);
-    signal(SIGALRM, mysig);
-    signal(SIGWINCH, mysig);
-    resume_timer();
 
     game = snew(board);
 
@@ -172,6 +159,7 @@ int main(int argc, char ** argv) {
     score = 0;
     play(game);
 
+    timeout(-1);    // wait for the key the game over box asks for
     getch();
 
     quit();
@@ -180,26 +168,7 @@ int main(int argc, char ** argv) {
 }
 
 void mysig(int s) {
-
-    if (s == SIGALRM) {
-	if (c_board && c_board->sel >= 0) {
-            c_board->jst++;
-            render1(c_board, c_board->sel, -1);
-            refresh();
-            doupdate();
-	}
-	signal(s, mysig);
-	return;
-    }
-
-    if (s == SIGWINCH) {
-        if (c_board) {
-            rinit(c_board, 0);
-        }
-        signal(s, mysig);
-        return;
-    }
-    
+    (void) s;
     quit();
 }
 
@@ -228,15 +197,13 @@ void quit() {
     exit(0);
 }
 
+/* The selected chip used to jump from a SIGALRM timer, drawing with
+ * curses inside the signal handler; do_move() now animates it between
+ * keys (gameplay.c), so there is no timer to start or stop. */
 void resume_timer() {
-    if (!timer.it_value.tv_usec) {
-	timer.it_value.tv_usec++;
-    }
-    setitimer(ITIMER_REAL, &timer, NULL);
 }
 
 void suspend_timer() {
-    setitimer(ITIMER_REAL, &stoptimer, NULL);
 }
 
 void load_hi_score() {

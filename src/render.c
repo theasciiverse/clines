@@ -247,13 +247,11 @@ void rinit(board * b, int first_time) {
 
     r_can_render = 1;
 
-    if (!first_time) {
-        suspend_timer();
-        endwin();
-        doupdate();
+    // after a resize (KEY_RESIZE) ncurses has already taken the new
+    // size; curses is set up once
+    if (first_time) {
+        initscr();
     }
-
-    initscr();
     erase();
 
     if (first_time) {
