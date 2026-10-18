@@ -13,6 +13,16 @@
 #include <clines/play.h>
 
 int r_can_render = 1;
+
+/* The board is drawn centred in the terminal: every position below is
+ * relative to r_oy, r_ox, set by rinit() */
+int r_ox = 0, r_oy = 0;
+#undef mvhline
+#undef mvvline
+#undef move
+#define mvhline(y, x, c, n)  mvwhline(stdscr, (y) + r_oy, (x) + r_ox, c, n)
+#define mvvline(y, x, c, n)  mvwvline(stdscr, (y) + r_oy, (x) + r_ox, c, n)
+#define move(y, x)           wmove(stdscr, (y) + r_oy, (x) + r_ox)
 int r_has_color;
 static int mini = 0;
 static void render1_mini(board *, int, int);
@@ -56,7 +66,7 @@ void rgo(board * b) {
     char * str = "Game over, press a key...";
     int len = strlen(str);
 
-    WINDOW * win = newwin(3, len + 2, 1, 1);
+    WINDOW * win = newwin(3, len + 2, 1 + r_oy, 1 + r_ox);
     wborder(win, '|', '|', '-', '-', '+', '+', '+', '+');
     wmove(win, 1, 1);
     wprintw(win, "%s", str);
@@ -209,6 +219,7 @@ void render1_full(board * b, int x, int y) {
 void rfini() {
     int nis, y;
     getmaxyx(stdscr, y, nis);
+    r_ox = r_oy = 0;
     erase();
     refresh();
     doupdate();
@@ -279,6 +290,7 @@ void rinit(board * b, int first_time) {
 
     // fprintf(stderr, "screen size : %d:%d\n", x, y);
     
+    r_ox = r_oy = 0;
     move(0,0);
 
     if (x < b->w*2+1) {
@@ -353,6 +365,12 @@ void rinit(board * b, int first_time) {
     y = (y-1)/b->h;
 
     b->s = mmin(x, y);
+
+    getmaxyx(stdscr, y, x);
+    r_oy = (y - (b->s * b->h + 1)) / 2;
+    r_ox = (x - (b->s * b->w + 1)) / 2;
+    if (r_oy < 0) { r_oy = 0; }
+    if (r_ox < 0) { r_ox = 0; }
 
     if (b->s<=3) {
         mini = 1;

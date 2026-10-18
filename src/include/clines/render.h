@@ -26,6 +26,7 @@ extern Gpm_Event * latest_gpm_event;
 #endif
 
 extern int r_can_render;
+extern int r_ox, r_oy;     /* where the board starts on the screen */
 extern int r_has_color;
 
 #endif

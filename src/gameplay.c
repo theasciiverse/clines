@@ -221,16 +221,16 @@ void do_move(board * b) {
                     if (gmr != OK || !(mevt.bstate & BUTTON1_RELEASED)) {
                         continue;
                     }
-                    bx = mevt.x;
-                    by = mevt.y;
+                    bx = mevt.x - r_ox;
+                    by = mevt.y - r_oy;
                     has_event = 1;
                 }
 #endif  /* HAVE_CMOUSE */
 
 #ifdef HAVE_GPM
                 if (has_gpm && has_gpm_event) {
-                    bx = gpm_event_x;
-                    by = gpm_event_y;
+                    bx = gpm_event_x - r_ox;
+                    by = gpm_event_y - r_oy;
                     has_event = 1;
                     has_gpm_event = 0;
                 }
@@ -240,7 +240,7 @@ void do_move(board * b) {
                 if (!has_event) { continue; }
                 
                 // did we hit on the grid ?
-                if (!(bx % b->s) || !(by % b->s)) {
+                if (bx < 0 || by < 0 || !(bx % b->s) || !(by % b->s)) {
                     continue;
                 }
 
