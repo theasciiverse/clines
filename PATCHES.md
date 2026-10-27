@@ -72,6 +72,9 @@ Windows: not built. The game is plain curses now (no signals or timers),
 so PDCurses would mostly do; what remains is getpwuid() for the score
 file's name (the user name from the environment instead) and mkdir()'s
 mode argument.
+- **How to play it, at the top of README.** A short note on installing and
+  starting it with av, or from a release archive; the original text follows
+  unchanged.
 
 ## Packaging (new files)
 

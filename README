@@ -1,3 +1,18 @@
+Play it with Asciiverse
+=======================
+
+With av, the Asciiverse client (https://asciiverse.sh):
+
+    av install clines
+    av play clines
+
+Or download the archive for your system from this repository's Releases,
+unpack it and run ./clines (clines.exe on Windows).
+
+The original README follows.
+
+------------------------------------------------------------------------
+
 
 Console lines
 +===========+
